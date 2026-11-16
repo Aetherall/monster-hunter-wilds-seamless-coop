@@ -72,4 +72,19 @@ REFramework's menu, under Script Generated UI.
 - A game call sequence proven in a run is moved, never reordered or
   retimed, without a new run.
 
+## License
+
+Copyright (C) 2026 the Seamless Coop contributors.
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version. It is distributed in the hope that it will be
+useful, but WITHOUT ANY WARRANTY. See `LICENSE`.
+
+Additional permission under GNU GPL version 3 section 7: the plugin only
+works inside Monster Hunter Wilds, through REFramework. You may run it
+with them, and convey it for that use, without those two programs being
+covered by this license.
+
 Not affiliated with Capcom. No game code or assets.
