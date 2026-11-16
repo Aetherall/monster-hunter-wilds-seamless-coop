@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Checks the plugin (tools/check-plugin), then copies its modules
+# (plugin/seamless_coop/) into the game's reframework/autorun/,
+# replacing what was installed there. With --entry, also copies
+# plugin/seamless_coop.lua: the game then loads the plugin at boot. The
+# plugin under its first name, seamless_quests, is removed: the two must
+# not load together.
+#   tools/install-plugin [--entry] [--on USER@HOST]    HOST: another machine's game, over ssh
+set -euo pipefail
+cd "$(dirname "$0")/.."
+. tools/common.sh
+tools/check-plugin
+remote= entry=
+while [ $# -gt 0 ]; do
+    case "$1" in --on) remote=$2; shift 2;; --entry) entry=1; shift;; *) echo "usage: tools/install-plugin [--on HOST] [--entry]" >&2; exit 1;; esac
+done
+if [ -n "$remote" ]; then
+    game='.local/share/Steam/steamapps/common/MonsterHunterWilds/reframework'
+    tar -C plugin -c seamless_coop | ssh -o BatchMode=yes "$remote" \
+        "test -d $game/autorun && rm -rf $game/autorun/seamless_coop $game/autorun/seamless_quests $game/autorun/seamless_quests.lua && tar -C $game/autorun -x"
+    [ -n "$entry" ] && scp -q plugin/seamless_coop.lua "$remote:$game/autorun/"
+    echo "installed on $remote${entry:+, with the boot entry}"
+    exit 0
+fi
+[ -d "$AUTORUN" ] || { echo "no $AUTORUN" >&2; exit 1; }
+rm -rf "$AUTORUN/seamless_coop" "$AUTORUN/seamless_quests" "$AUTORUN/seamless_quests.lua"
+cp -r plugin/seamless_coop "$AUTORUN/seamless_coop"
+[ -n "$entry" ] && cp plugin/seamless_coop.lua "$AUTORUN/"
+echo "installed${entry:+, with the boot entry}"

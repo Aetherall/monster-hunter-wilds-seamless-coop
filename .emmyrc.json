@@ -1,0 +1,29 @@
+{
+  "runtime": {
+    "version": "Lua5.4"
+  },
+  "workspace": {
+    "workspaceRoots": [
+      "plugin"
+    ],
+    "library": [
+      "types"
+    ],
+    "ignoreDir": [
+      ".local",
+      ".direnv",
+      "build",
+      "tools"
+    ]
+  },
+  "strict": {
+    "requirePath": true,
+    "typeCall": true,
+    "arrayIndex": true
+  },
+  "diagnostics": {
+    "disable": [
+      "unused"
+    ]
+  }
+}

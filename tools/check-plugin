@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Checks the plugin without the game: it compiles (luac), has no undefined
+# name and no function of a cyclomatic complexity above 5 (luacheck), and
+# typechecks (emmylua_check, from emmylua-analyzer-rust) against its own
+# annotations and types/reframework.lua. The types are the plugin's
+# model: a situation or a state that does not exist does not typecheck.
+# tools/install-plugin runs this first.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+. tools/common.sh
+in_dev_shell luac luacheck emmylua_check -- "$@"
+luac -p plugin/*.lua plugin/seamless_coop/*.lua plugin/seamless_coop/*/*.lua
+luacheck -q plugin --std lua54 --no-self \
+    --globals sdk re imgui json log fs ValueType --no-max-line-length --max-cyclomatic-complexity 5
+emmylua_check --warnings-as-errors . | tail -n 3

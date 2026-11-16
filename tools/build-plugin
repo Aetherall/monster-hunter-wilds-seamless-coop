@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Bundles the plugin into one file, build/seamless_coop.lua, to drop into
+# the game's reframework/autorun/: every module of plugin/seamless_coop/
+# as a function in package.preload, under the name it is required by,
+# then the entry (plugin/seamless_coop.lua). Refuses a plugin that does
+# not pass tools/check-plugin.
+#
+# A line number in an error of the bundle is the bundle's: each module
+# starts under a comment with its file's name.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+. tools/common.sh
+in_dev_shell luac luacheck emmylua_check lua -- "$@"
+tools/check-plugin
+out=build/seamless_coop.lua
+version=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)
+[ -z "$(git status --porcelain -- plugin 2>/dev/null)" ] || version="$version, with changes not committed"
+mkdir -p build
+modules=$(find plugin/seamless_coop -name '*.lua' | LC_ALL=C sort)
+{
+    echo "-- Seamless Coop for Monster Hunter Wilds (REFramework), in one file."
+    echo "-- Put it in the game's reframework/autorun/. Built from $version by tools/build-plugin:"
+    echo "-- do not edit, the source is in plugin/."
+    for file in $modules; do
+        name=${file#plugin/}
+        name=${name%.lua}
+        printf '\n-- %s\npackage.preload["%s"] = function(...)\n' "$file" "${name//\//.}"
+        cat "$file"
+        printf '\nend\n'
+    done
+    printf '\n-- plugin/seamless_coop.lua\n'
+    cat plugin/seamless_coop.lua
+} > "$out"
+luac -p "$out"
+# Every module is in the bundle under the name the others require it by,
+# and none requires a module the bundle does not hold.
+lua - "$out" $modules <<'LUA'
+local out = arg[1]
+local required = {}
+for i = 2, #arg do
+    for name in io.open(arg[i]):read("a"):gmatch('require%("(seamless_coop%.[%w_.]+)"%)') do required[name] = arg[i] end
+end
+require = function() return { start = function() end } end
+dofile(out)
+local count = 0
+for name in pairs(package.preload) do
+    if name:match("^seamless_coop%.") then count = count + 1 end
+end
+assert(count == #arg - 1, string.format("%d modules in the bundle, %d files", count, #arg - 1))
+for name, file in pairs(required) do
+    assert(package.preload[name], string.format("%s requires %s, which the bundle does not hold", file, name))
+end
+LUA
+echo "$out: $(echo "$modules" | wc -l) modules, $(wc -l < "$out") lines, from $version"

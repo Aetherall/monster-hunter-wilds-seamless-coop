@@ -1,0 +1,13 @@
+---@class sq.OfferPresence
+---@field wanted table<string, boolean>
+---@field invites table<integer, boolean>
+
+---@class sq.Wanted
+---@field id string
+---@field words fun(self: sq.Wanted, stage: integer): string, string
+---@field act async fun(self: sq.Wanted)
+---@field due fun(self: sq.Wanted): boolean
+---@field made fun(self: sq.Wanted)
+---@field taken_back fun(self: sq.Wanted)             the game took the Y slot back
+---@field again fun(self: sq.Wanted)                  to be made again at once
+---@field over fun(self: sq.Wanted, presence: sq.OfferPresence): boolean
